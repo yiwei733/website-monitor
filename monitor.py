@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 # ── 設定區 ──────────────────────────────────────────────
 SITES = [
     {
-        "name": "範例網站",
-        "url": "https://example.com",
+        "name": "動物運動會",
+        "url": "https://ur.alipay.com/_4xjqonI5sia0znUaEouuhU",
     },
     # 新增更多網站：
     # {"name": "我的網站", "url": "https://mysite.com"},

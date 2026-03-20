@@ -88,15 +88,15 @@ def main():
             old = snapshots.get(url, {})
 
             if not old:
-    snapshots[url] = {"hash": current_hash, "text": text[:3000], "updated": now}
-    preview = text[:500] + ("…（略）" if len(text) > 500 else "")
-    msg = (
-        f"📌 <b>首次快照完成</b>\n"
-        f"網站：<b>{name}</b>\n"
-        f"網址：{url}\n"
-        f"時間：{now}\n\n"
-        f"📄 <b>內容預覽：</b>\n{preview}"
-    )
+                snapshots[url] = {"hash": current_hash, "text": text[:3000], "updated": now}
+                preview = text[:500] + ("…（略）" if len(text) > 500 else "")
+                msg = (
+                    f"📌 <b>首次快照完成</b>\n"
+                    f"網站：<b>{name}</b>\n"
+                    f"網址：{url}\n"
+                    f"時間：{now}\n\n"
+                    f"📄 <b>內容預覽：</b>\n{preview}"
+                )
                 send_telegram(token, chat_id, msg)
                 print(f"  ✅ 首次快照已儲存")
 

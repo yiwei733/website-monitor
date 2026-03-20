@@ -18,16 +18,19 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: 安裝 Chrome 瀏覽器
+        uses: browser-actions/setup-chrome@v1
+
       - name: 安裝依賴套件
-        run: pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4 selenium
 
       - name: 還原快照快取
         uses: actions/cache@v4
         with:
           path: data/snapshots.json
-          key: snapshots-${{ runner.os }}
+          key: snapshots-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            snapshots-
+            snapshots-${{ runner.os }}-
 
       - name: 執行監控腳本
         env:

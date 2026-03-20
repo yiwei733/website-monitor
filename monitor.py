@@ -21,7 +21,7 @@ SITES = [
 ]
 
 SNAPSHOT_FILE = "data/snapshots.json"
-WAIT_SECONDS = 8  # 等待頁面 JavaScript 載入的秒數
+WAIT_SECONDS = 8
 # ────────────────────────────────────────────────────────
 
 
@@ -64,23 +64,25 @@ def extract_categories(full_text: str) -> dict:
             "彩票", "彩種", "六合彩", "時時彩", "快三", "11選5",
             "快樂彩", "雙色球", "大樂透", "體彩", "福彩",
             "真人", "棋牌", "電子", "捕魚", "體育", "電競",
-            "百家樂", "龍虎", "輪盤", "老虎機", "沙巴"
+            "百家樂", "龍虎", "輪盤", "老虎機", "沙巴",
+            "PC28", "時時彩", "PK10", "飛艇", "快樂8",
         ],
         "充值方式": [
             "充值", "存款", "入金", "銀行卡", "支付寶", "微信",
             "USDT", "加密貨幣", "虛擬幣", "快捷支付",
-            "網銀", "轉帳", "掃碼"
+            "網銀", "轉帳", "掃碼", "TRC20", "ERC20",
         ],
         "活動/優惠": [
             "活動", "優惠", "紅包", "彩金", "返水", "回饋",
             "首存", "首充", "獎勵", "禮金", "贈送",
-            "VIP", "代理", "推薦", "佣金", "福利"
+            "VIP", "代理", "推薦", "佣金", "福利",
+            "簽到", "每日", "周週", "月月",
         ],
     }
 
     found = {}
     for category, words in keywords.items():
-        hits = [w for w in words if w in full_text]
+        hits = list(dict.fromkeys([w for w in words if w in full_text]))
         found[category] = hits
 
     return found
@@ -90,7 +92,7 @@ def format_categories(categories: dict) -> str:
     lines = []
     for cat, items in categories.items():
         if items:
-            lines.append(f"• {cat}：{', '.join(items[:10])}")
+            lines.append(f"• {cat}：{', '.join(items)}")
         else:
             lines.append(f"• {cat}：（未偵測到）")
     return "\n".join(lines)
@@ -139,6 +141,17 @@ def send_telegram(token: str, chat_id: str, message: str):
     resp.raise_for_status()
 
 
+def send_long_text(token: str, chat_id: str, title: str, text: str):
+    """將長文字拆成多則訊息發送，每則最多 3500 字"""
+    chunks = [text[i:i+3500] for i in range(0, len(text), 3500)]
+    total = len(chunks)
+    for i, chunk in enumerate(chunks):
+        part_label = f"（第 {i+1}/{total} 則）\n" if total > 1 else ""
+        msg = f"{title}{part_label}\n{chunk}"
+        send_telegram(token, chat_id, msg)
+        time.sleep(1)
+
+
 def main():
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     chat_id = os.environ["TELEGRAM_CHAT_ID"]
@@ -163,21 +176,24 @@ def main():
                 if not old:
                     snapshots[url] = {
                         "hash": current_hash,
-                        "text": text[:3000],
+                        "text": text[:5000],
                         "categories": categories,
                         "updated": now,
                     }
                     cat_summary = format_categories(categories)
-                    preview = text[:300] + ("…" if len(text) > 300 else "")
-                    msg = (
+                    summary_msg = (
                         f"📌 <b>首次快照完成</b>\n"
                         f"網站：<b>{name}</b>\n"
                         f"網址：{url}\n"
                         f"時間：{now}\n\n"
-                        f"📊 <b>偵測到的內容分類：</b>\n{cat_summary}\n\n"
-                        f"📄 <b>頁面預覽：</b>\n{preview}"
+                        f"📊 <b>偵測到的內容分類：</b>\n{cat_summary}"
                     )
-                    send_telegram(token, chat_id, msg)
+                    send_telegram(token, chat_id, summary_msg)
+                    send_long_text(
+                        token, chat_id,
+                        f"📄 <b>{name} 頁面完整內容：</b>\n",
+                        text
+                    )
                     print(f"  ✅ 首次快照已儲存")
 
                 elif old["hash"] != current_hash:
@@ -188,11 +204,11 @@ def main():
 
                     snapshots[url] = {
                         "hash": current_hash,
-                        "text": text[:3000],
+                        "text": text[:5000],
                         "categories": categories,
                         "updated": now,
                     }
-                    msg = (
+                    summary_msg = (
                         f"🚨 <b>網站內容有變動！</b>\n"
                         f"網站：<b>{name}</b>\n"
                         f"網址：{url}\n"
@@ -200,7 +216,12 @@ def main():
                         f"🔄 <b>變動摘要：</b>\n{diff}\n\n"
                         f"📊 <b>目前內容分類：</b>\n{cat_summary}"
                     )
-                    send_telegram(token, chat_id, msg)
+                    send_telegram(token, chat_id, summary_msg)
+                    send_long_text(
+                        token, chat_id,
+                        f"📄 <b>{name} 最新完整內容：</b>\n",
+                        text
+                    )
                     print(f"  🔔 偵測到變動，已發送通知")
 
                 else:

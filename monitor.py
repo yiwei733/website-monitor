@@ -7,14 +7,9 @@ from bs4 import BeautifulSoup
 
 # ── 設定區 ──────────────────────────────────────────────
 SITES = [
-    {
-        "name": "範例網站",
-        "url": "https://example.com",
-    },
-    # 新增更多網站：
-    # {"name": "聯贏", "url": "https://www.ly77m.com/"},
-    # {"name": "双贏2", "url": "https://www.sy05a.com/"},
-    # {"name": "汇富", "url": "https://www.hf98w.com/"},
+    {"name": "聯贏", "url": "https://www.ly77m.com/"},
+    {"name": "双贏2", "url": "https://www.sy05a.com/"},
+    {"name": "汇富", "url": "https://www.hf98w.com/"},
 ]
 
 SNAPSHOT_FILE = "data/snapshots.json"

@@ -1,0 +1,43 @@
+name: 網站變動監控
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 取得程式碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Python 環境
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安裝依賴套件
+        run: pip install requests beautifulsoup4
+
+      - name: 還原快照快取
+        uses: actions/cache@v4
+        with:
+          path: data/snapshots.json
+          key: snapshots-${{ runner.os }}
+          restore-keys: |
+            snapshots-
+
+      - name: 執行監控腳本
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python monitor.py
+
+      - name: 儲存快照結果
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data/snapshots.json
+          key: snapshots-${{ runner.os }}-${{ github.run_id }}
